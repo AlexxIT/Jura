@@ -6,7 +6,7 @@ def mod256(i: int):
     return i % 256
 
 
-def shuffle(src, cnt, key1, key2):
+def shuffle(src: int, cnt: int, key1: int, key2: int) -> int:
     i1 = mod256(cnt >> 4)
     i2 = NUMB1[mod256(src + cnt + key1) % 16]
     i3 = NUMB2[mod256(i2 + key2 + i1 - cnt - key1) % 16]
@@ -14,7 +14,7 @@ def shuffle(src, cnt, key1, key2):
     return mod256(i4 - cnt - key1) % 16
 
 
-def encdec(src: bytes, key: int):
+def encdec(src: bytes | bytearray, key: int) -> bytes:
     dst = b""
     key1 = key >> 4
     key2 = key & 0xF

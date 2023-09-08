@@ -3,7 +3,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .core import DOMAIN, start_product
+from .core import DOMAIN
 from .core.entity import JuraEntity
 
 
@@ -23,4 +23,4 @@ class JuraButton(JuraEntity, ButtonEntity):
             self._async_write_ha_state()
 
     async def async_press(self) -> None:
-        await start_product(self.device)
+        self.device.start_product()

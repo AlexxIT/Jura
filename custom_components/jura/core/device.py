@@ -4,6 +4,8 @@ from zipfile import ZipFile
 
 import xmltodict
 
+from .client import Client
+
 SELECTS = [
     "product",  # 1
     # "grinder_ratio",  # 2
@@ -36,7 +38,8 @@ class Device:
 
         self.name = name
         self.mac = mac
-        self.key = adv[0]
+
+        self.client = Client(mac, adv[0])
 
         machine = get_machine(number)
         self.model = machine["model"]
@@ -83,13 +86,7 @@ class Device:
 
     def select_option(self, attr: str, option: str):
         if attr == "product":
-            self.product = next(i for i in self.products if i["@Name"] == option)
-            self.values = {}
-
-            # dispatch to all listeners
-            for update in self.updates:
-                update()
-
+            self.select_product(option)
             return
 
         attribute = self.product and self.product.get(attr.upper())
@@ -100,13 +97,27 @@ class Device:
         self.set_value(attr, int(value, 16))
 
     def set_value(self, attr: str, value: int):
+        self.client.ping()
+
         self.values[attr] = value
 
-    def command(self) -> bytes | None:
-        if not self.product:
-            return
+    def select_product(self, product: str):
+        self.client.ping()
 
-        data = [0 for _ in range(18)]
+        self.product = next(i for i in self.products if i["@Name"] == product)
+        self.values = {}
+
+        # dispatch to all listeners
+        for update in self.updates:
+            update()
+
+    def start_product(self):
+        if self.product:
+            self.client.send(self.command)
+
+    @property
+    def command(self) -> bytearray:
+        data = bytearray(18)
 
         # set product
         data[1] = int(self.product["@Code"], 16)
@@ -133,12 +144,12 @@ class Device:
             data[pos] = value
 
         # additional data (some unknown)
-        data[0] = self.key
+        # data[0] = self.key
         # data[9] = 1
         # data[16] = 6
         # data[17] = self.key
 
-        return bytes(data)
+        return data
 
 
 def get_machine(number: str) -> dict:
