@@ -21,7 +21,7 @@ class JuraSelect(JuraEntity, SelectEntity):
 
         self._attr_current_option = attribute.get("default")
         self._attr_options = attribute.get("options", [])
-        self._attr_available = bool(attribute)
+        self._attr_available = "default" in attribute
 
         if self.hass:
             self._async_write_ha_state()

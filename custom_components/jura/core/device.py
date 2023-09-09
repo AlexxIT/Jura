@@ -44,6 +44,7 @@ class Device:
         machine = get_machine(number)
         self.model = machine["model"]
         self.products = machine["products"]
+        self.options = get_options(self.products)
 
         self.product = None
         self.values = None
@@ -66,7 +67,7 @@ class Device:
 
         attribute = self.product and self.product.get(attr.upper())
         if not attribute:
-            return {}
+            return {"options": self.options[attr]} if attr in self.options else {}
 
         if "@Value" in attribute:
             return Attribute(
@@ -167,3 +168,16 @@ def get_machine(number: str) -> dict:
             products = raw["JOE"]["PRODUCTS"]["PRODUCT"]
 
     return {"model": items[1], "products": products}
+
+
+def get_options(products: list[dict]) -> dict[str, list]:
+    return {
+        attr: list(
+            {
+                option["@Name"]: None
+                for product in products
+                for option in product.get(attr.upper(), {}).get("ITEM", [])
+            }.keys()  # unique keys with save order
+        )
+        for attr in SELECTS
+    }
