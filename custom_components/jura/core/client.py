@@ -5,7 +5,7 @@ from bleak import BleakClient
 
 from .encryption import encdec
 
-ACTIVE_TIME = 2 * 60
+ACTIVE_TIME = 60
 COMMAND_TIME = 15
 
 
@@ -75,6 +75,6 @@ class Client:
                 except:
                     pass  # continue if not
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(.5)
 
         self.send_task = None
