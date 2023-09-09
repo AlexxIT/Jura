@@ -35,7 +35,6 @@ def test_device():
             "Barista Lungo",
             "1 Flat White",
             "Cortado",
-            "Powderproduct",
         ],
     }
 
@@ -98,5 +97,3 @@ def test_encdec():
     b = bytes.fromhex("77ea3dd38981dadba32bfa98a4a3faab45fd")
     b = encdec(b, 0x2A)
     assert b.hex() == "2a0400080c000e010001000000000000062a"
-
-

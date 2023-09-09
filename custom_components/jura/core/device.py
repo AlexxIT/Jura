@@ -61,7 +61,9 @@ class Device:
     def attribute(self, attr: str) -> Attribute:
         if attr == "product":
             return Attribute(
-                options=[i["@Name"] for i in self.products],
+                options=[
+                    i["@Name"] for i in self.products if i.get("@Active") != "false"
+                ],
                 default=self.product["@Name"] if self.product else None,
             )
 
