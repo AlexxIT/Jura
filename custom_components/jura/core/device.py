@@ -113,9 +113,8 @@ class Device:
 
     def start_product(self):
         if self.product:
-            self.client.send(self.command)
+            self.client.send(self.command())
 
-    @property
     def command(self) -> bytearray:
         data = bytearray(18)
 
