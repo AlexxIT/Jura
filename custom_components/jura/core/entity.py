@@ -7,6 +7,8 @@ from .device import Device
 
 
 class JuraEntity(Entity):
+    _attr_should_poll = False
+
     def __init__(self, device: Device, attr: str):
         self.device = device
         self.attr = attr
@@ -25,7 +27,7 @@ class JuraEntity(Entity):
 
         self.internal_update()
 
-        device.updates.append(self.internal_update)
+        device.register_update(attr, self.internal_update)
 
     def internal_update(self):
         pass

@@ -1,30 +1,37 @@
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import ADDRESS, CONNECTABLE
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, callback
 
 from .core import DOMAIN
 from .core.device import Device
 
-PLATFORMS = ["button", "number", "select"]
+PLATFORMS = ["binary_sensor", "button", "number", "select"]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    mac = config_entry.data["mac"]
-
-    device = bluetooth.async_ble_device_from_address(hass, mac)
-    if not device:
-        raise ConfigEntryNotReady("MAC not found")
-
-    try:
-        adv = device.metadata["manufacturer_data"][171]
-    except:
-        raise ConfigEntryNotReady("BLE not found")
-
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     devices = hass.data.setdefault(DOMAIN, {})
-    devices[config_entry.entry_id] = Device(config_entry.title, mac, adv)
+    devices[entry.entry_id] = device = Device(
+        entry.title, entry.data["mac"], bytes.fromhex(entry.data["adv"])
+    )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    @callback
+    def _async_update_ble(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        device.update_ble(service_info.rssi)
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_update_ble,
+            {ADDRESS: device.mac, CONNECTABLE: True},
+            bluetooth.BluetoothScanningMode.ACTIVE,
+        )
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

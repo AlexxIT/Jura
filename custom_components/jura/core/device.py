@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypedDict, Callable
 from zipfile import ZipFile
@@ -31,6 +32,9 @@ class Attribute(TypedDict, total=False):
     step: int
     value: int
 
+    is_on: bool
+    extra: dict
+
 
 class Device:
     def __init__(self, name: str, mac: str, adv: bytes):
@@ -39,7 +43,10 @@ class Device:
         self.name = name
         self.mac = mac
 
-        self.client = Client(mac, adv[0])
+        self.connected = None
+        self.connextra = None
+
+        self.client = Client(mac, adv[0], self.set_connected)
 
         machine = get_machine(number)
         self.model = machine["model"]
@@ -48,7 +55,34 @@ class Device:
 
         self.product = None
         self.values = None
-        self.updates: list[Callable] = []
+        self.updates_connect: list = []
+        self.updates_product: list = []
+
+    def register_update(self, attr: str, handler: Callable):
+        if attr == "product":
+            return
+        elif attr == "connection":
+            self.updates_connect.append(handler)
+        else:
+            self.updates_product.append(handler)
+
+    def update_ble(self, rssi: int):
+        if self.connected is None:
+            self.connected = False
+
+        self.connextra = {
+            "last_seen": datetime.now(timezone.utc),
+            "rssi": rssi,
+        }
+
+        for handler in self.updates_connect:
+            handler()
+
+    def set_connected(self, connected: bool):
+        self.connected = connected
+
+        for handler in self.updates_connect:
+            handler()
 
     def selects(self) -> list[str]:
         products = str(self.products).lower()
@@ -65,6 +99,13 @@ class Device:
                     i["@Name"] for i in self.products if i.get("@Active") != "false"
                 ],
                 default=self.product["@Name"] if self.product else None,
+            )
+
+        if attr == "connection":
+            return (
+                Attribute(is_on=self.connected, extra=self.connextra)
+                if self.connected is not None
+                else {}
             )
 
         attribute = self.product and self.product.get(attr.upper())
@@ -111,8 +152,8 @@ class Device:
         self.values = {}
 
         # dispatch to all listeners
-        for update in self.updates:
-            update()
+        for handler in self.updates_product:
+            handler()
 
     def start_product(self):
         if self.product:
