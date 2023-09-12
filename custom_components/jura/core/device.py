@@ -4,8 +4,10 @@ from typing import TypedDict, Callable
 from zipfile import ZipFile
 
 import xmltodict
+from bleak import BLEDevice, AdvertisementData
 
 from .client import Client
+from .encryption import encdec
 
 SELECTS = [
     "product",  # 1
@@ -37,16 +39,17 @@ class Attribute(TypedDict, total=False):
 
 
 class Device:
-    def __init__(self, name: str, mac: str, adv: bytes):
-        number = str(int.from_bytes(adv[4:6], "little"))
+    def __init__(self, name: str, device: BLEDevice, advertisment: AdvertisementData):
+        manufacturer = advertisment.manufacturer_data[171]
+        number = str(int.from_bytes(manufacturer[4:6], "little"))
 
         self.name = name
-        self.mac = mac
+        self.key = manufacturer[0]
 
-        self.connected = None
-        self.connextra = None
+        self.client = Client(device, self.set_connected)
 
-        self.client = Client(mac, adv[0], self.set_connected)
+        self.connected = False
+        self.conn_info = {"mac": device.address}
 
         machine = get_machine(number)
         self.model = machine["model"]
@@ -58,6 +61,12 @@ class Device:
         self.updates_connect: list = []
         self.updates_product: list = []
 
+        self.update_ble(advertisment)
+
+    @property
+    def mac(self) -> str:
+        return self.client.device.address
+
     def register_update(self, attr: str, handler: Callable):
         if attr == "product":
             return
@@ -66,14 +75,9 @@ class Device:
         else:
             self.updates_product.append(handler)
 
-    def update_ble(self, rssi: int):
-        if self.connected is None:
-            self.connected = False
-
-        self.connextra = {
-            "last_seen": datetime.now(timezone.utc),
-            "rssi": rssi,
-        }
+    def update_ble(self, advertisment: AdvertisementData):
+        self.conn_info["last_seen"] = (datetime.now(timezone.utc),)
+        self.conn_info["rssi"] = advertisment.rssi
 
         for handler in self.updates_connect:
             handler()
@@ -102,11 +106,7 @@ class Device:
             )
 
         if attr == "connection":
-            return (
-                Attribute(is_on=self.connected, extra=self.connextra)
-                if self.connected is not None
-                else {}
-            )
+            return Attribute(is_on=self.connected, extra=self.conn_info)
 
         attribute = self.product and self.product.get(attr.upper())
         if not attribute:
@@ -159,10 +159,11 @@ class Device:
         if self.product:
             self.client.send(self.command())
 
-    def command(self) -> bytearray:
+    def command(self) -> bytes:
         data = bytearray(18)
 
         # set product
+        data[0] = self.key
         data[1] = int(self.product["@Code"], 16)
 
         for attr in SELECTS + NUMBERS:
@@ -192,7 +193,7 @@ class Device:
         # data[16] = 6
         # data[17] = self.key
 
-        return data
+        return encdec(data, self.key)
 
 
 def get_machine(number: str) -> dict:

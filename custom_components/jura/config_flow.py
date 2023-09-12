@@ -8,10 +8,6 @@ from .core import DOMAIN
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            mac = user_input["mac"]
-            info = bluetooth.async_last_service_info(self.hass, mac)
-            adv: bytes = info.manufacturer_data[info.manufacturer_id]
-            user_input["adv"] = adv.hex()
             return self.async_create_entry(title="", data=user_input)
 
         devices = bluetooth.async_get_scanner(self.hass).discovered_devices

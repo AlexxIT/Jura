@@ -1,5 +1,4 @@
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.match import ADDRESS, CONNECTABLE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
@@ -11,27 +10,34 @@ PLATFORMS = ["binary_sensor", "button", "number", "select"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     devices = hass.data.setdefault(DOMAIN, {})
-    devices[entry.entry_id] = device = Device(
-        entry.title, entry.data["mac"], bytes.fromhex(entry.data["adv"])
-    )
 
     @callback
-    def _async_update_ble(
+    def update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        device.update_ble(service_info.rssi)
+        if device := devices.get(entry.entry_id):
+            device.update_ble(service_info)
+            return
 
+        devices[entry.entry_id] = Device(
+            entry.title, service_info.device, service_info.advertisement
+        )
+
+        hass.create_task(
+            hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        )
+
+    # https://developers.home-assistant.io/docs/core/bluetooth/api/
     entry.async_on_unload(
         bluetooth.async_register_callback(
             hass,
-            _async_update_ble,
-            {ADDRESS: device.mac, CONNECTABLE: True},
+            update_ble,
+            {"address": entry.data["mac"], "connectable": True},
             bluetooth.BluetoothScanningMode.ACTIVE,
         )
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
