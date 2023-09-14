@@ -6,6 +6,8 @@ from typing import Callable
 from bleak import BleakClient, BLEDevice, BleakError
 from bleak_retry_connector import establish_connection
 
+from . import encryption
+
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVE_TIME = 120
@@ -19,11 +21,11 @@ class Client:
 
         self.client: BleakClient | None = None
 
-        self.ping_task = None
+        self.ping_future: asyncio.Future | None = None
+        self.ping_task: asyncio.Task | None = None
         self.ping_time = 0
 
         self.send_data = None
-        self.send_task = None
         self.send_time = 0
 
     def ping(self):
@@ -33,16 +35,18 @@ class Client:
             self.ping_task = asyncio.create_task(self._ping_loop())
 
     def send(self, data: bytes):
-        self.ping()
-
         # if send loop active - we change sending data
         self.send_time = time.time() + COMMAND_TIME
         self.send_data = data
 
-        if not self.send_task:
-            self.send_task = asyncio.create_task(self._send_loop())
+        self.ping()
+
+        if self.ping_future:
+            self.ping_future.cancel()
 
     async def _ping_loop(self):
+        loop = asyncio.get_event_loop()
+
         while time.time() < self.ping_time:
             try:
                 self.client = await establish_connection(
@@ -53,12 +57,28 @@ class Client:
 
                 # heartbeat loop
                 while time.time() < self.ping_time:
-                    await asyncio.sleep(10)
-
                     # important dummy read for keep connection
-                    await self.client.read_gatt_char(
+                    data = await self.client.read_gatt_char(
                         "5a401531-ab2e-2548-c435-08c300000710"
                     )
+                    key = data[0]
+
+                    if self.send_data:
+                        if time.time() < self.send_time:
+                            await self.client.write_gatt_char(
+                                "5a401525-ab2e-2548-c435-08c300000710",
+                                data=encryption.encdec(self.send_data, key),
+                                response=True,
+                            )
+                        self.send_data = None
+
+                    # asyncio.sleep(10) with cancel
+                    self.ping_future = loop.create_future()
+                    loop.call_later(10, self.ping_future.cancel)
+                    try:
+                        await self.ping_future
+                    except asyncio.CancelledError:
+                        pass
 
                 await self.client.disconnect()
             except (TimeoutError, BleakError):
@@ -72,20 +92,3 @@ class Client:
                 await asyncio.sleep(1)
 
         self.ping_task = None
-
-    async def _send_loop(self):
-        while time.time() < self.send_time:
-            if self.client and self.client.is_connected:
-                try:
-                    await self.client.write_gatt_char(
-                        "5a401525-ab2e-2548-c435-08c300000710",
-                        self.send_data,
-                        response=True,
-                    )
-                    break  # stop if OK
-                except Exception as e:
-                    _LOGGER.warning(f"send error", exc_info=e)
-
-            await asyncio.sleep(0.5)
-
-        self.send_task = None

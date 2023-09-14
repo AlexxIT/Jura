@@ -7,7 +7,6 @@ import xmltodict
 from bleak import BLEDevice, AdvertisementData
 
 from .client import Client
-from .encryption import encdec
 
 SELECTS = [
     "product",  # 1
@@ -163,7 +162,6 @@ class Device:
         data = bytearray(18)
 
         # set product
-        data[0] = self.key
         data[1] = int(self.product["@Code"], 16)
 
         for attr in SELECTS + NUMBERS:
@@ -193,7 +191,7 @@ class Device:
         # data[16] = 6
         # data[17] = self.key
 
-        return encdec(data, self.key)
+        return data
 
 
 def get_machine(number: str) -> dict:
