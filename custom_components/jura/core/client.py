@@ -67,7 +67,7 @@ class Client:
                         if time.time() < self.send_time:
                             await self.client.write_gatt_char(
                                 "5a401525-ab2e-2548-c435-08c300000710",
-                                data=encryption.encdec(self.send_data, key),
+                                data=encrypt(self.send_data, key),
                                 response=True,
                             )
                         self.send_data = None
@@ -81,8 +81,10 @@ class Client:
                         pass
 
                 await self.client.disconnect()
-            except (TimeoutError, BleakError):
+            except TimeoutError:
                 pass
+            except BleakError as e:
+                _LOGGER.debug("ping error", exc_info=e)
             except Exception as e:
                 _LOGGER.warning("ping error", exc_info=e)
             finally:
@@ -92,3 +94,9 @@ class Client:
                 await asyncio.sleep(1)
 
         self.ping_task = None
+
+
+def encrypt(data: bytes, key: int) -> bytes:
+    data = bytearray(data)
+    data[0] = key
+    return encryption.encdec(data, key)
