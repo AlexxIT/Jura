@@ -1,18 +1,19 @@
 {
   "domain": "jura",
   "name": "JURA Coffee Machines",
-  "config_flow": true,
-  "documentation": "https://github.com/AlexxIT/Jura",
-  "issue_tracker": "https://github.com/AlexxIT/Jura/issues",
   "codeowners": [
     "@AlexxIT"
   ],
+  "config_flow": true,
   "dependencies": [
     "bluetooth_adapters"
   ],
+  "documentation": "https://github.com/AlexxIT/Jura",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/AlexxIT/Jura/issues",
   "requirements": [
     "xmltodict"
   ],
-  "version": "v1.0.0",
-  "iot_class": "calculated"
+  "version": "1.0.0"
 }
