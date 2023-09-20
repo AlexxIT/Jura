@@ -14,9 +14,26 @@ Or manually copy `jura` folder from [latest release](https://github.com/AlexxIT/
 
 ## Configuration
 
-Configuration > [Integrations](https://my.home-assistant.io/redirect/integrations/) > Add Integration > [JURA Coffee Machines](https://my.home-assistant.io/redirect/config_flow_start/?domain=jura)
+1. Add default [Bluetooth](https://www.home-assistant.io/integrations/bluetooth/) integration
 
-*If the integration is not in the list, you need to clear the browser cache.*
+2. Configuration > [Integrations](https://my.home-assistant.io/redirect/integrations/) > Add Integration > [JURA Coffee Machines](https://my.home-assistant.io/redirect/config_flow_start/?domain=jura)
+
+*If you have't see any MAC address in the setup window - your server can't discover coffee machine nearby.*
+
+## Bluetooth
+
+It is highly recommended to have a good bluetooth adapter. Check list [here](https://www.home-assistant.io/integrations/bluetooth/).
+
+For example, I had unstable control with **five** different adapters (*Unbranded CSR clone detected*):
+
+```
+# dmesg | grep Bluetooth
+[ 1285.821799] Bluetooth: hci0: CSR: Setting up dongle with HCI ver=9 rev=0001; LMP ver=9 subver=0001; manufacturer=2279
+[ 1285.821832] Bluetooth: hci0: CSR: Unbranded CSR clone detected; adding workarounds and force-suspending once...
+[ 1285.821846] Bluetooth: hci0: CSR: Couldn't suspend the device for our Barrot 8041a02 receive-issue workaround
+```
+
+It was only the sixth adapter with the `CSR8510A10` chip that fixed the situation.
 
 ## Useful links
 
