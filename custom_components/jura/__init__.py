@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         bluetooth.async_register_callback(
             hass,
             update_ble,
-            {"address": entry.data["mac"], "connectable": True},
+            {"address": entry.data["mac"], "manufacturer_id": 171, "connectable": True},
             bluetooth.BluetoothScanningMode.ACTIVE,
         )
     )
@@ -41,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    if entry.entry_id in hass.data[DOMAIN]:
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return True
