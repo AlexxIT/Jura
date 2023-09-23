@@ -2,7 +2,9 @@
 
 [Home Assistant](https://www.home-assistant.io/) custom component for control [Jura Coffee Machines](https://us.jura.com/) via Bluetooth module.
 
-Tested with [Jura E8 Chrome EB](https://us.jura.com/en/homeproducts/machines/E8-Chrome-NAA-15371) model. But should support others.
+Tested with the following coffee machines, but should support others: 
+- [Jura E8 Chrome EB](https://us.jura.com/en/homeproducts/machines/E8-Chrome-NAA-15371)
+- [Jura ENA8](https://us.jura.com/en/homeproducts/machines/ENA-8-Metropolitan-Black-NA-15281) (with physical buttons)
 
 ![](demo.png)
 
@@ -18,7 +20,7 @@ Or manually copy `jura` folder from [latest release](https://github.com/AlexxIT/
 
 2. Configuration > [Integrations](https://my.home-assistant.io/redirect/integrations/) > Add Integration > [JURA Coffee Machines](https://my.home-assistant.io/redirect/config_flow_start/?domain=jura)
 
-*If you have't see any MAC address in the setup window - your server can't discover coffee machine nearby.*
+*If you have't see any MAC address in the setup window - your server can't currently discover any coffee machine nearby. Check that the machine is on, and bluetooth is working correctly and close enough*
 
 ## Bluetooth
 
