@@ -20,7 +20,9 @@ Or manually copy `jura` folder from [latest release](https://github.com/AlexxIT/
 
 2. Configuration > [Integrations](https://my.home-assistant.io/redirect/integrations/) > Add Integration > [JURA Coffee Machines](https://my.home-assistant.io/redirect/config_flow_start/?domain=jura)
 
-*If you have't see any MAC address in the setup window - your server can't currently discover any coffee machine nearby. Check that the machine is on, and bluetooth is working correctly and close enough*
+*If you have no MAC address in the setup window, then your HA server can't currently discover any coffee machine nearby. Check that the machine is on, bluetooth is working correctly (can you connect using the JURA smartphone application) and close enough.*
+
+If the machine is discovered but the device is not added, please check that you don't have protected the machine with a PIN code. PIN codes are not currently supported.
 
 ## Bluetooth
 
@@ -43,3 +45,10 @@ It was only the sixth adapter with the `CSR8510A10` chip that fixed the situatio
 - https://github.com/Jutta-Proto/protocol-cpp
 - https://github.com/Jutta-Proto/protocol-bt-cpp
 - https://github.com/franfrancisco9/Jura-Python-BT
+
+## Bluetooth Proxy
+
+It is also possible to use a [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html) with [active](https://esphome.io/components/bluetooth_proxy.html#configuration) mode supported.
+
+Currently tested with an M5Stack Atom Lite device.
+
