@@ -3,7 +3,7 @@
 [Home Assistant](https://www.home-assistant.io/) custom component for control [Jura Coffee Machines](https://us.jura.com/) via [Bluetooth module](https://us.jura.com/en/homeproducts/accessories/SmartConnect-Main-72167).
 
 Tested with the following coffee machines, but should support others: 
-- [Jura E8 Chrome EB](https://us.jura.com/en/homeproducts/machines/E8-Chrome-NAA-15371)
+- [Jura E8](https://us.jura.com/en/homeproducts/machines/E8-Piano-Black-NAA-15400)
 - [Jura ENA8](https://us.jura.com/en/homeproducts/machines/ENA-8-Metropolitan-Black-NA-15281) (with physical buttons)
 
 ![](demo.png)
@@ -24,6 +24,12 @@ Or manually copy `jura` folder from [latest release](https://github.com/AlexxIT/
 
 If the machine is discovered but the device is not added, please check that you don't have protected the machine with a PIN code. PIN codes are not currently supported.
 
+## Demo
+
+Video with Yandex voice assistant (Alice) and english subtitles:
+
+[![](https://img.youtube.com/vi/NzvDjmDLbJE/mqdefault.jpg)](https://www.youtube.com/watch?v=NzvDjmDLbJE)
+
 ## Bluetooth
 
 It is highly recommended to have a good bluetooth adapter. Check list [here](https://www.home-assistant.io/integrations/bluetooth/).
@@ -39,16 +45,13 @@ For example, I had unstable control with **five** different adapters (*Unbranded
 
 It was only the sixth adapter with the `CSR8510A10` chip that fixed the situation.
 
+It is also possible to use a [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html) with [active](https://esphome.io/components/bluetooth_proxy.html#configuration) mode supported.
+
+Currently tested with an M5Stack Atom Lite device.
+
 ## Useful links
 
 - https://lunarius.fe80.eu/blog/tag/bluetooth.html
 - https://github.com/Jutta-Proto/protocol-cpp
 - https://github.com/Jutta-Proto/protocol-bt-cpp
 - https://github.com/franfrancisco9/Jura-Python-BT
-
-## Bluetooth Proxy
-
-It is also possible to use a [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html) with [active](https://esphome.io/components/bluetooth_proxy.html#configuration) mode supported.
-
-Currently tested with an M5Stack Atom Lite device.
-
