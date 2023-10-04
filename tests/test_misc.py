@@ -1,10 +1,20 @@
+from bleak import BLEDevice, AdvertisementData
+
 from custom_components.jura.core.device import Device
 from custom_components.jura.core.encryption import encdec
 from custom_components.jura.select import JuraSelect
 
 
+def make_device() -> Device:
+    ble = BLEDevice("", None, None, 0)
+    adv = AdvertisementData(None, {171: b"*\x05\x08\x03\xfb;"}, {}, [], None, 0, ())
+    device = Device("Jura", ble, adv)
+    device.client.ping = lambda *args: None
+    return device
+
+
 def test_device():
-    device = Device("Jura", "AA:BB:CC:DD:EE:FF", b"*\x05\x08\x03\xfb;")
+    device = make_device()
     assert device.model == "E8 (EB)"
 
     # Check GUI elements list
@@ -38,9 +48,6 @@ def test_device():
         ],
     }
 
-    # Check we have no command
-    assert device.command() is None
-
     # Select product
     device.select_option("product", "Cafe Barista")
 
@@ -70,13 +77,13 @@ def test_device():
 
 
 def test_coffee_strength():
-    device = Device("JURA", "AA:BB:CC:DD:EE:FF", b"*\x05\x08\x03\xfb;")
+    device = make_device()
 
     select = JuraSelect(device, "coffee_strength")
-    assert select.name == "JURA Coffee Strength"
+    assert select.name == "Jura Coffee Strength"
     assert select.available is False
     assert select.current_option is None
-    assert select.options == []
+    assert select.options == ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
     device.select_option("product", "Cafe Barista")
 
