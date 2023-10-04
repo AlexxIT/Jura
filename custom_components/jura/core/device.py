@@ -43,7 +43,6 @@ class Device:
         number = str(int.from_bytes(manufacturer[4:6], "little"))
 
         self.name = name
-        self.key = manufacturer[0]
 
         self.client = Client(device, self.set_connected)
 
@@ -75,7 +74,7 @@ class Device:
             self.updates_product.append(handler)
 
     def update_ble(self, advertisment: AdvertisementData):
-        self.conn_info["last_seen"] = (datetime.now(timezone.utc),)
+        self.conn_info["last_seen"] = datetime.now(timezone.utc)
         self.conn_info["rssi"] = advertisment.rssi
 
         for handler in self.updates_connect:
