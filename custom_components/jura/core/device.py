@@ -10,7 +10,7 @@ from .client import Client
 
 SELECTS = [
     "product",  # 1
-    # "grinder_ratio",  # 2
+    "grinder_ratio",  # 2
     "coffee_strength",  # 3
     "temperature",  # 7
 ]
