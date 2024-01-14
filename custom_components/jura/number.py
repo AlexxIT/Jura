@@ -20,8 +20,8 @@ class JuraNumber(JuraEntity, NumberEntity):
         attribute = self.device.attribute(self.attr)
 
         self._attr_available = "value" in attribute
-        self._attr_native_min_value = attribute.get("min")
-        self._attr_native_max_value = attribute.get("max")
+        self._attr_native_min_value = attribute.get("min", 0)
+        self._attr_native_max_value = attribute.get("max", 0)
         self._attr_native_step = attribute.get("step")
         self._attr_native_value = attribute.get("value")
 
