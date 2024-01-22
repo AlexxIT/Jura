@@ -49,6 +49,12 @@ It is also possible to use a [Bluetooth Proxy](https://esphome.io/components/blu
 
 Currently tested with an M5Stack Atom Lite device.
 
+## Wi-Fi
+
+I have NO plans to support a [Wi-Fi module](https://us.jura.com/en/homeproducts/accessories/WiFi-Connect-24160). This requires the purchase of such a module, researching the protocol and write new code. Do all those things that have already been done with the Bluetooth module. And maybe even a lot more work. Without any sense and hope of success.
+
+If you want support for your coffee machine and can't find a working solution, just buy a Bluetooth module.
+
 ## Useful links
 
 - https://lunarius.fe80.eu/blog/tag/bluetooth.html
