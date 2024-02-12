@@ -3,8 +3,11 @@
 [Home Assistant](https://www.home-assistant.io/) custom component for control [Jura Coffee Machines](https://us.jura.com/) via [Bluetooth module](https://us.jura.com/en/homeproducts/accessories/SmartConnect-Main-72167).
 
 Tested with the following coffee machines, but should support others: 
+
+- [Jura E6](https://github.com/AlexxIT/Jura/issues/13)
 - [Jura E8](https://us.jura.com/en/homeproducts/machines/E8-Piano-Black-NAA-15400)
 - [Jura ENA8](https://us.jura.com/en/homeproducts/machines/ENA-8-Metropolitan-Black-NA-15281) (with physical buttons)
+- [Jura Z8](https://github.com/AlexxIT/Jura/issues/15)
 
 ![](demo.png)
 
