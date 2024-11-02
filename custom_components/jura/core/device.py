@@ -204,7 +204,14 @@ def get_machine(number: str) -> dict:
                 items = line.split(";")
                 break
 
-        with f.open("machinefiles/" + items[2] + ".xml") as xml:
+        dirname = f"documents/xml/{items[2]}/"
+        filename = next(
+            i.filename
+            for i in f.filelist
+            if i.filename.startswith(dirname) and i.filename.endswith(".xml")
+        )
+
+        with f.open(filename) as xml:
             raw = xmltodict.parse(xml.read())
             products = raw["JOE"]["PRODUCTS"]["PRODUCT"]
 
