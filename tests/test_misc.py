@@ -168,6 +168,51 @@ def test_device_giga5():
     assert attr == {"default": "Normal", "options": ["Low", "Normal", "High"]}
 
 
+def test_device_j8():
+    # https://github.com/AlexxIT/Jura/issues/27
+    device = make_device(b"*\x05\x08\x03\xc9<")
+    assert device.model == "J8 twin (EA)"
+
+    # Check GUI elements list
+    assert device.selects() == [
+        "product",
+        "grinder_ratio",
+        "coffee_strength",
+        "temperature",
+    ]
+    assert device.numbers() == [
+        "water_amount",
+        "milk_amount",
+        "milk_foam_amount",
+        "bypass",
+        "milk_break",
+    ]
+
+    # Check products list
+    attr = device.attribute("product")
+    assert attr == {
+        "default": None,
+        "options": [
+            "Espresso",
+            "Coffee",
+            "Cortado",
+            "Cafe Barista / Americano",
+            "Barista Lungo",
+            "Cappuccino",
+            "Latte Macchiato",
+            "Espresso Macchiato",
+            "Flat White",
+            "Milkcoffee",
+            "Espresso Doppio",
+            "Sweet Latte",
+            "Milk",
+            "Milk Foam",
+            "Hotwater Portion",
+            "Hotwater Portion(Green tea)",
+        ],
+    }
+
+
 def test_coffee_strength():
     device = make_device(b"*\x05\x08\x03\xfb;")
 
