@@ -50,6 +50,7 @@ class Device:
         self.conn_info = {"mac": device.address}
 
         machine = get_machine(number)
+        assert machine, manufacturer.hex()
         self.model = machine["model"]
         self.products = machine["products"]
         self.options = get_options(self.products)
@@ -193,16 +194,16 @@ class Device:
         return data
 
 
-def get_machine(number: str) -> dict:
+def get_machine(number: str) -> dict | None:
     path = Path(__file__).parent / "resources.zip"
     with ZipFile(path) as f:
+        number = number.encode()
         with f.open("JOE_MACHINES.TXT") as txt:
-            for line in txt:
-                line = line.decode()
-                if not line.startswith(number):
-                    continue
-                items = line.split(";")
-                break
+            try:
+                line = next(i for i in txt.readlines() if i.startswith(number))
+            except StopIteration:
+                return None
+            items = line.decode().split(";")
 
         dirname = f"documents/xml/{items[2]}/"
         filename = next(

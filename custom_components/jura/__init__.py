@@ -26,9 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             device.update_ble(service_info)
             return
 
-        devices[entry.entry_id] = Device(
-            entry.title, service_info.device, service_info.advertisement
-        )
+        try:
+            devices[entry.entry_id] = Device(
+                entry.title, service_info.device, service_info.advertisement
+            )
+        except Exception as e:
+            _LOGGER.warning(f"Create device: {repr(e)}")
+            return
 
         hass.create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
