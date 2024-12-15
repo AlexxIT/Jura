@@ -31,3 +31,6 @@ class JuraEntity(Entity):
 
     def internal_update(self):
         pass
+
+    async def async_update(self):
+        self.device.client.ping()
