@@ -1,9 +1,13 @@
+import logging
+
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .core import DOMAIN
 from .core.device import Device
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "button", "number", "select"]
 
@@ -16,6 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
+        _LOGGER.debug(f"{change} {service_info.advertisement}")
+
         if device := devices.get(entry.entry_id):
             device.update_ble(service_info)
             return
