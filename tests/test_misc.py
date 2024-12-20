@@ -1,4 +1,4 @@
-from bleak import BLEDevice, AdvertisementData
+from bleak import AdvertisementData, BLEDevice
 
 from custom_components.jura.core.device import Device
 from custom_components.jura.core.encryption import encdec

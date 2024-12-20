@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TypedDict, Callable
+from typing import Callable, TypedDict
 from zipfile import ZipFile
 
 import xmltodict
-from bleak import BLEDevice, AdvertisementData
+from bleak import AdvertisementData, BLEDevice
 
 from .client import Client
 

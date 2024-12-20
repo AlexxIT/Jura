@@ -3,7 +3,7 @@ import logging
 import time
 from typing import Callable
 
-from bleak import BleakClient, BLEDevice, BleakError
+from bleak import BLEDevice, BleakClient, BleakError
 from bleak_retry_connector import establish_connection
 
 from . import encryption
