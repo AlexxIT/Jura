@@ -38,29 +38,22 @@ class Attribute(TypedDict, total=False):
 
 
 class Device:
-    def __init__(self, name: str, device: BLEDevice, advertisment: AdvertisementData):
-        manufacturer = advertisment.manufacturer_data[171]
-        number = str(int.from_bytes(manufacturer[4:6], "little"))
-
+    def __init__(self, name: str, model: str, products: list, device: BLEDevice):
         self.name = name
+        self.model = model
+        self.products = products
 
         self.client = Client(device, self.set_connected)
 
         self.connected = False
         self.conn_info = {"mac": device.address}
 
-        machine = get_machine(number)
-        assert machine, manufacturer.hex()
-        self.model = machine["model"]
-        self.products = machine["products"]
         self.options = get_options(self.products)
 
         self.product = None
         self.values = None
         self.updates_connect: list = []
         self.updates_product: list = []
-
-        self.update_ble(advertisment)
 
     @property
     def mac(self) -> str:
@@ -194,15 +187,27 @@ class Device:
         return data
 
 
-def get_machine(number: str) -> dict | None:
+class EmptyModel(Exception):
+    pass
+
+
+class UnsupportedModel(Exception):
+    pass
+
+
+def get_machine(adv: bytes) -> dict | None:
+    model_id = int.from_bytes(adv[4:6], "little")
+    if model_id == 0:
+        raise EmptyModel()
+
     path = Path(__file__).parent / "resources.zip"
     with ZipFile(path) as f:
-        number = number.encode()
+        prefix = str(model_id).encode()
         with f.open("JOE_MACHINES.TXT") as txt:
             try:
-                line = next(i for i in txt.readlines() if i.startswith(number))
+                line = next(i for i in txt.readlines() if i.startswith(prefix))
             except StopIteration:
-                return None
+                raise UnsupportedModel(model_id)
             items = line.decode().split(";")
 
         dirname = f"documents/xml/{items[2]}/"

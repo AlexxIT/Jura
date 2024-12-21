@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .core import DOMAIN
-from .core.device import Device
+from .core.device import Device, EmptyModel, UnsupportedModel, get_machine
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,16 +23,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug(f"{change} {service_info.advertisement}")
 
         if device := devices.get(entry.entry_id):
-            device.update_ble(service_info)
+            device.update_ble(service_info.advertisement)
             return
 
         try:
-            devices[entry.entry_id] = Device(
-                entry.title, service_info.device, service_info.advertisement
-            )
-        except Exception as e:
-            _LOGGER.warning(f"Create device: {repr(e)}")
+            machine = get_machine(service_info.advertisement.manufacturer_data[171])
+        except EmptyModel:
             return
+        except UnsupportedModel as e:
+            _LOGGER.error("Unsupported model: %s", *e.args)
+            return
+
+        devices[entry.entry_id] = device = Device(
+            entry.title, machine["model"], machine["products"], service_info.device
+        )
+        device.update_ble(service_info.advertisement)
 
         hass.create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
