@@ -20,6 +20,7 @@ class Client:
         self.callback = callback
 
         self.client: BleakClient | None = None
+        self.loop = asyncio.get_running_loop()
 
         self.ping_future: asyncio.Future | None = None
         self.ping_task: asyncio.Task | None = None
@@ -32,21 +33,29 @@ class Client:
         self.ping_time = time.time() + ACTIVE_TIME
 
         if not self.ping_task:
-            self.ping_task = asyncio.create_task(self._ping_loop())
+            self.ping_task = self.loop.create_task(self._ping_loop())
+
+    def ping_cancel(self):
+        # stop ping time
+        self.ping_time = 0
+
+        # cancel ping sleep timer
+        if self.ping_future:
+            self.ping_future.cancel()
 
     def send(self, data: bytes):
         # if send loop active - we change sending data
         self.send_time = time.time() + COMMAND_TIME
         self.send_data = data
 
+        # refresh ping time
         self.ping()
 
+        # cancel ping sleep timer
         if self.ping_future:
             self.ping_future.cancel()
 
     async def _ping_loop(self):
-        loop = asyncio.get_event_loop()
-
         while time.time() < self.ping_time:
             try:
                 self.client = await establish_connection(
@@ -73,8 +82,8 @@ class Client:
                         self.send_data = None
 
                     # asyncio.sleep(10) with cancel
-                    self.ping_future = loop.create_future()
-                    loop.call_later(10, self.ping_future.cancel)
+                    self.ping_future = self.loop.create_future()
+                    self.loop.call_later(10, self.ping_future.cancel)
                     try:
                         await self.ping_future
                     except asyncio.CancelledError:

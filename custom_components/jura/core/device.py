@@ -89,6 +89,9 @@ class Device:
         return [k for k in NUMBERS if k in products]
 
     def attribute(self, attr: str) -> Attribute:
+        if attr == "connection":
+            return Attribute(is_on=self.connected, extra=self.conn_info)
+
         if attr == "product":
             return Attribute(
                 options=[
@@ -96,9 +99,6 @@ class Device:
                 ],
                 default=self.product["@Name"] if self.product else None,
             )
-
-        if attr == "connection":
-            return Attribute(is_on=self.connected, extra=self.conn_info)
 
         attribute = self.product and self.product.get(attr.upper())
         if not attribute:
