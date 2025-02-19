@@ -218,6 +218,13 @@ def test_device_j8():
     }
 
 
+def test_device_x8c():
+    # https://github.com/AlexxIT/Jura/issues/33
+    adv = bytes.fromhex("2a0508039c35921532006d33793201000000000000000000000000")
+    device = make_device(adv)
+    assert device.model == "GIGA X8c Professional"
+
+
 def test_coffee_strength():
     device = make_device(b"*\x05\x08\x03\xfb;")
 

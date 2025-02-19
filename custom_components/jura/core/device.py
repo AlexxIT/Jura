@@ -210,7 +210,7 @@ def get_machine(adv: bytes) -> dict | None:
                 raise UnsupportedModel(model_id)
             items = line.decode().split(";")
 
-        dirname = f"documents/xml/{items[2]}/"
+        dirname = f"documents/xml/{items[2].upper()}/"
         filename = next(
             i.filename
             for i in f.filelist
