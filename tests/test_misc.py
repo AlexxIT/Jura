@@ -1,14 +1,19 @@
-from bleak import AdvertisementData, BLEDevice
+import asyncio
 
+from bleak import BLEDevice
+
+from custom_components.jura import get_machine
 from custom_components.jura.core.device import Device
 from custom_components.jura.core.encryption import encdec
 from custom_components.jura.select import JuraSelect
 
 
 def make_device(adv: bytes) -> Device:
+    asyncio.get_running_loop = lambda: None
+
+    machine = get_machine(adv)
     ble = BLEDevice("", None, None, 0)
-    adv = AdvertisementData(None, {171: adv}, {}, [], None, 0, ())
-    device = Device("Jura", ble, adv)
+    device = Device("Jura", machine["model"], machine["products"], ble)
     device.client.ping = lambda *args: None
     return device
 
