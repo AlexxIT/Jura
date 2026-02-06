@@ -22,7 +22,7 @@ class JuraEntity(Entity):
         self._attr_name = device.name + " " + attr.replace("_", " ").title()
         self._attr_unique_id = device.mac.replace(":", "") + "_" + attr
 
-        self.entity_id = DOMAIN + "." + self._attr_unique_id
+        #self.entity_id = DOMAIN + "." + self._attr_unique_id
 
         self.internal_update()
 
