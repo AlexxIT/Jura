@@ -1,3 +1,4 @@
+import logging
 import asyncio
 
 from homeassistant.components.switch import SwitchEntity
@@ -8,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN
 from .core.entity import JuraEntity
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, add_entities: AddEntitiesCallback
@@ -31,7 +33,8 @@ class JuraSwitch(JuraEntity, SwitchEntity):
                 await asyncio.sleep(1)
 
     async def async_turn_off(self) -> None:
-        self.device.client.ping_cancel()
+        await self.device.client.ping_cancel()
         for _ in range(5):
             if self.device.connected:
                 await asyncio.sleep(1)
+        _LOGGER.debug("Disconnected from Jura device")

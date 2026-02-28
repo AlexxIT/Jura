@@ -55,6 +55,64 @@ It is also possible to use a [Bluetooth Proxy](https://esphome.io/components/blu
 
 Currently tested with an M5Stack Atom Lite device.
 
+## Raw Commands - Advanced
+
+You can send raw commands to the machine by selecting the UUID and entering the command bytes.
+Command bytes are prefixed by encryption key (ex: if you enter 47 22, the command sent will be 2A 47 22)
+
+Example commands sent to P-MODE UUID:
+```
+47 03 - Cancel (works in some commands, for example you can cancel power-off)
+47 04 - Power Off machine / Press OK
+
+47 21 - Clean milk system
+47 22 - Rinse machine
+47 23 - Rinse milk system
+47 24 - Start cleaning machine
+47 25 - Start descaling
+47 26 - Start filter change
+47 28 - Start removing water from machine
+47 30 - Install accessory (Bluetooth / WiFi module)
+47 31 - Disconnect accesory (Bluetooth / WiFi module)
+47 32 - Factory reset. WARNING! NO CONFIRMATION REQUIRED.
+```
+
+Example automation to trigger coffee rinse:
+```
+alias: Jura - Rinse Machine
+description: ""
+triggers:
+  - alias: Trigger 30 minutes after a coffee was made
+    trigger: state
+    entity_id:
+      - sensor.cda5bac6ae54_total_products_total_coffee_with_milk
+    to: null
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+conditions: []
+actions:
+  - alias: Set command to rinse coffee system
+    action: text.set_value
+    target:
+      entity_id: text.cda5bac6ae54_raw_command_data
+    data:
+      value: 47 22
+  - alias: Select the P-MODE command UUID
+    action: select.select_option
+    target:
+      entity_id: select.cda5bac6ae54_raw_command_uuid
+    data:
+      option: P_MODE
+  - alias: Press the button to send the command
+    action: button.press
+    data: {}
+    target:
+      entity_id: button.cda5bac6ae54_send_raw_command
+mode: single
+```
+
 ## Wi-Fi
 
 I have NO plans to support a [Wi-Fi module](https://us.jura.com/en/homeproducts/accessories/WiFi-Connect-24160). This requires the purchase of such a module, researching the protocol and write new code. Do all those things that have already been done with the Bluetooth module. And maybe even a lot more work. Without any sense and hope of success.

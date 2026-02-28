@@ -1,3 +1,6 @@
 __pycache__/
 .homeassistant/
 .idea/
+.vscode/
+*~
+custom_components/jura/jura.txt
