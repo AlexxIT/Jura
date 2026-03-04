@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
-from .core.entity import JuraEntity
+from .core.entity import JuraEntity, JuraWifiEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,20 +84,68 @@ ALERT_SENSORS = [
     },
 ]
 
+# WiFi state-word binary sensors
+_WIFI_STATE_SENSORS = [
+    {
+        "attr": "machine_ready",
+        "display_name": "Machine Ready",
+        "icon": "mdi:coffee-maker-check",
+        "device_class": BinarySensorDeviceClass.RUNNING,
+        "entity_category": None,
+    },
+    {
+        "attr": "water_missing",
+        "display_name": "Water Missing",
+        "icon": "mdi:water-off",
+        "device_class": BinarySensorDeviceClass.PROBLEM,
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "attr": "grinder_empty",
+        "display_name": "Grinder Empty",
+        "icon": "mdi:coffee-off",
+        "device_class": BinarySensorDeviceClass.PROBLEM,
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "attr": "drip_tray_full",
+        "display_name": "Drip Tray Full",
+        "icon": "mdi:tray-alert",
+        "device_class": BinarySensorDeviceClass.PROBLEM,
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+    {
+        "attr": "grounds_full",
+        "display_name": "Grounds Full",
+        "icon": "mdi:delete-alert",
+        "device_class": BinarySensorDeviceClass.PROBLEM,
+        "entity_category": EntityCategory.DIAGNOSTIC,
+    },
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, add_entities: AddEntitiesCallback
 ):
     device = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create connection sensor
-    entities: list = [JuraSensor(device, "connection")]
+    if config_entry.data.get("connection_type") == "wifi":
+        entities: list = [JuraWifiConnectivity(device)]
+        for sensor_def in _WIFI_STATE_SENSORS:
+            entities.append(JuraWifiStateBit(device, sensor_def))
+        add_entities(entities)
+        return
 
-    # Create alert binary sensors
+    # BLE path
+    entities = [JuraSensor(device, "connection")]
     for alert_info in ALERT_SENSORS:
         entities.append(JuraAlertBinarySensor(device, alert_info))
-
     add_entities(entities)
+
+
+# ---------------------------------------------------------------------------
+# BLE binary sensor classes (unchanged)
+# ---------------------------------------------------------------------------
 
 
 class JuraSensor(JuraEntity, BinarySensorEntity):
@@ -138,5 +186,41 @@ class JuraAlertBinarySensor(JuraEntity, BinarySensorEntity):
             for _, alert_name in self.device.active_alerts.items()
         )
 
+        if self.hass:
+            self._async_write_ha_state()
+
+
+# ---------------------------------------------------------------------------
+# WiFi binary sensor classes
+# ---------------------------------------------------------------------------
+
+
+class JuraWifiConnectivity(JuraWifiEntity, BinarySensorEntity):
+    """Connectivity sensor for a WiFi Jura machine."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def internal_update(self):
+        self._attr_is_on = self.device.connected
+        self._attr_extra_state_attributes = self.device.conn_info
+        if self.hass:
+            self._async_write_ha_state()
+
+
+class JuraWifiStateBit(JuraWifiEntity, BinarySensorEntity):
+    """Binary sensor derived from a single bit of the @TM:08 state word."""
+
+    def __init__(self, device, sensor_def: dict):
+        self._state_attr = sensor_def["attr"]
+        super().__init__(device, sensor_def["attr"])
+        self._attr_name = f"{device.name} {sensor_def['display_name']}"
+        self._attr_icon = sensor_def["icon"]
+        self._attr_device_class = sensor_def["device_class"]
+        self._attr_entity_category = sensor_def["entity_category"]
+
+    def internal_update(self):
+        getter = getattr(self.device, self._state_attr, None)
+        self._attr_is_on = getter() if callable(getter) else False
         if self.hass:
             self._async_write_ha_state()

@@ -2,8 +2,38 @@
   "config": {
     "step": {
       "user": {
+        "title": "Choose Connection Type",
         "data": {
-          "mac": "MAC"
+          "connection_type": "Connection Type"
+        }
+      },
+      "ble": {
+        "title": "Select Bluetooth Device",
+        "data": {
+          "mac": "MAC Address"
+        }
+      },
+      "wifi_discover": {
+        "title": "Discover Jura WiFi Machines",
+        "description": "Scanning for Jura machines on the network. Select a discovered machine or choose to enter an IP address manually.",
+        "data": {
+          "host": "Machine"
+        }
+      },
+      "wifi_manual": {
+        "title": "Enter Machine IP Address",
+        "data": {
+          "host": "IP Address"
+        }
+      },
+      "wifi_auth": {
+        "title": "WiFi Authentication",
+        "description": "Enter the auth hash from your J.O.E. app pairing. Leave PIN empty if not required.",
+        "data": {
+          "auth_hash": "Auth Hash",
+          "pin": "PIN (optional)",
+          "device_name": "Device Name",
+          "port": "Port"
         }
       }
     }
