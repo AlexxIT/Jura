@@ -113,7 +113,6 @@ class Client:
                     except asyncio.CancelledError:
                         pass
 
-                await self.client.disconnect()
             except TimeoutError:
                 pass
             except BleakError as e:
@@ -121,7 +120,15 @@ class Client:
             except Exception as e:
                 _LOGGER.warning("ping error", exc_info=e)
             finally:
-                self.client = None
+                # Disconnect here rather than on the happy path only: any exception
+                # above would otherwise skip the disconnect, and dropping the
+                # reference orphans the BleakClient and its D-Bus connection.
+                client, self.client = self.client, None
+                if client is not None:
+                    try:
+                        await client.disconnect()
+                    except Exception as e:
+                        _LOGGER.debug("disconnect error", exc_info=e)
                 if self.callback:
                     self.callback(False)
                 await asyncio.sleep(1)
