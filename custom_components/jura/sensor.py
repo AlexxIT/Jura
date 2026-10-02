@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -48,9 +49,25 @@ async def async_setup_entry(
         try:
             await device.read_statistics()
             await device.read_alerts()
+            await device.read_maintenance_percents()
+
+            # Create maintenance sensors after first successful data fetch
+            if (
+                device.maintenance.get("cleaning_percents")
+                and not device.maintenance_sensors
+            ):
+                # Skip entries that don't return a valid percent (0-100).
+                # E.g. "Decalc" on ENA8 seems to always returns 255 on my machine
+                sensors = [
+                    JuraMaintenancePercentSensor(device, name)
+                    for name, value in device.maintenance["cleaning_percents"].items()
+                    if isinstance(value, (int, float)) and 0 <= value <= 100
+                ]
+                if sensors:
+                    device.maintenance_sensors = sensors
+                    async_add_entities(sensors)
         except Exception as ex:
-            # we log as info as this is expected if the device is off
-            _LOGGER.info(f"Error refreshing statistics: {ex}")
+            _LOGGER.debug(f"Error refreshing data: {ex}")
 
     # Schedule regular updates
     entry.async_on_unload(
@@ -166,5 +183,32 @@ class JuraAlertSensor(JuraEntity, SensorEntity):
     def internal_update(self):
         """Override parent method to ensure alerts are refreshed."""
         _LOGGER.debug(f"Updating alert sensor {self._attr_name}")
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+
+class JuraMaintenancePercentSensor(JuraEntity, SensorEntity):
+    """Sensor for an individual maintenance percentage."""
+
+    _attr_icon = "mdi:wrench"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "%"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, device, maint_type: str):
+        safe_id = maint_type.lower().replace(" ", "_").replace("-", "_")
+        super().__init__(device, f"maintenance_{safe_id}")
+        self._attr_name = f"{device.name} {maint_type}"
+        self.maint_type = maint_type
+        device.register_maintenance_update(self.internal_update)
+
+    @property
+    def native_value(self) -> Any:
+        value = self.device.maintenance.get("cleaning_percents", {}).get(
+            self.maint_type
+        )
+        return value
+
+    def internal_update(self):
         if self.hass is not None:
             self.async_write_ha_state()
