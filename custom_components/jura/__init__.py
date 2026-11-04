@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    if entry.entry_id in hass.data[DOMAIN]:
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and (device := hass.data[DOMAIN].pop(entry.entry_id, None)):
+        await device.client.async_stop()
+    return unload_ok

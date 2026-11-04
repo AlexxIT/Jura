@@ -39,12 +39,16 @@ class Client:
         self.ping_future: asyncio.Future | None = None
         self.ping_task: asyncio.Task | None = None
         self.ping_time = 0
+        self.stopped = False
         self.key = key
         self.send_data = None
         self.send_time = 0
         self.send_uuid = None
 
     def ping(self):
+        if self.stopped:
+            return
+
         self.ping_time = time.time() + ACTIVE_TIME
 
         if not self.ping_task:
@@ -57,6 +61,25 @@ class Client:
         # cancel ping sleep timer
         if self.ping_future:
             self.ping_future.cancel()
+
+    async def async_stop(self):
+        self.stopped = True
+        self.ping_cancel()
+
+        if task := self.ping_task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            self.ping_task = None
+
+        if client := self.client:
+            self.client = None
+            try:
+                await client.disconnect()
+            except Exception as e:
+                _LOGGER.debug("disconnect error", exc_info=e)
 
     def send(self, data: bytes, uuid: str = UUIDs.START_PRODUCT):
         # if send loop active - we change sending data
