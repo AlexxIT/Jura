@@ -1,13 +1,16 @@
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, TypedDict
+from typing import TYPE_CHECKING, Callable, TypedDict
 from zipfile import ZipFile
 
 import xmltodict
-from bleak import AdvertisementData, BLEDevice
+from bleak import BLEDevice
 
 from .client import Client
+
+if TYPE_CHECKING:
+    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,9 +87,12 @@ class Device:
         else:
             self.updates_product.append(handler)
 
-    def update_ble(self, advertisment: AdvertisementData):
+    def update_ble(self, service_info: "BluetoothServiceInfoBleak"):
+        # best connectable path (proxy or adapter) may change over time
+        self.client.device = service_info.device
+
         self.conn_info["last_seen"] = datetime.now(timezone.utc)
-        self.conn_info["rssi"] = advertisment.rssi
+        self.conn_info["rssi"] = service_info.rssi
 
         for handler in self.updates_connect:
             handler()
