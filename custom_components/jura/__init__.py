@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         machine["key"],
         service_info.device,
     )
-    device.update_ble(service_info.advertisement)
+    device.update_ble(service_info)
 
     @callback
     def update_ble(
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         change: bluetooth.BluetoothChange,
     ) -> None:
         _LOGGER.debug(f"{change} {service_info.advertisement}")
-        device.update_ble(service_info.advertisement)
+        device.update_ble(service_info)
 
     # https://developers.home-assistant.io/docs/core/bluetooth/api/
     entry.async_on_unload(
