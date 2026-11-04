@@ -82,3 +82,33 @@ def test_device_update_ble_refreshes_ble_device():
         assert device.conn_info["mac"] == "AA:BB:CC:DD:EE:FF"
 
     asyncio.run(main())
+
+
+def test_client_uses_fresh_ble_device(monkeypatch):
+    used = []
+    fake = FakeBleakClient()
+
+    async def establish_connection(client_class, device, name, **kwargs):
+        used.append(device)
+        return fake
+
+    monkeypatch.setattr(client_module, "establish_connection", establish_connection)
+
+    async def main():
+        old = BLEDevice("AA:BB:CC:DD:EE:FF", None, {"source": "old"})
+        new = BLEDevice("AA:BB:CC:DD:EE:FF", None, {"source": "new"})
+        client = Client(old, key=42)
+        client.loop = asyncio.get_event_loop()
+        client.ble_device_callback = lambda: new
+
+        client.ping()
+        for _ in range(100):
+            if client.client:
+                break
+            await asyncio.sleep(0.01)
+
+        assert used == [new]
+        assert client.device is new
+        await client.async_stop()
+
+    asyncio.run(main())

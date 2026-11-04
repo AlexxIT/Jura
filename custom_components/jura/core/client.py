@@ -33,6 +33,8 @@ class Client:
     def __init__(self, device: BLEDevice, callback: Callable = None, key: int = None):
         self.device = device
         self.callback = callback
+        # returns a fresh BLEDevice (best connectable path) before each connect
+        self.ble_device_callback: Callable[[], BLEDevice | None] | None = None
         self.client: BleakClient | None = None
         self.loop = asyncio.get_running_loop()
 
@@ -97,6 +99,8 @@ class Client:
     async def _ping_loop(self):
         while time.time() < self.ping_time:
             try:
+                if self.ble_device_callback and (device := self.ble_device_callback()):
+                    self.device = device
                 self.client = await establish_connection(
                     BleakClient, self.device, self.device.address
                 )

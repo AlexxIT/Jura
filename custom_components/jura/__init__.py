@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # HA 2026.8+: on-demand active sweep instead of waiting for the next one
         if request_active_scan := getattr(bluetooth, "async_request_active_scan", None):
             await request_active_scan(hass)
-            service_info = bluetooth.async_last_service_info(hass, mac, connectable=True)
+            service_info = bluetooth.async_last_service_info(
+                hass, mac, connectable=True
+            )
 
     if not service_info:
         raise ConfigEntryNotReady(f"Jura {mac} not seen by a connectable scanner yet")
@@ -70,6 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         service_info.device,
     )
     device.update_ble(service_info)
+    device.client.ble_device_callback = lambda: bluetooth.async_ble_device_from_address(
+        hass, mac, connectable=True
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
