@@ -45,12 +45,16 @@ async def async_setup_entry(
 
     async def refresh_statistics(*_):
         """Refresh statistics regularly."""
+        # read alerts even when reading statistics fails
         try:
             await device.read_statistics()
-            await device.read_alerts()
         except Exception as ex:
             # we log as info as this is expected if the device is off
             _LOGGER.info(f"Error refreshing statistics: {ex}")
+        try:
+            await device.read_alerts()
+        except Exception as ex:
+            _LOGGER.info(f"Error refreshing alerts: {ex}")
 
     # Schedule regular updates
     entry.async_on_unload(
