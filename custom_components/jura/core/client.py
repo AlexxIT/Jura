@@ -82,6 +82,12 @@ class Client:
 
                 # heartbeat loop
                 while time.time() < self.ping_time:
+                    if not self.client.is_connected:
+                        # the machine dropped the connection: connect again
+                        # instead of using a dead client until ping_time ends
+                        _LOGGER.debug("connection lost, reconnecting")
+                        break
+
                     if self.send_data:
                         if time.time() < self.send_time:
                             await self.client.write_gatt_char(
@@ -137,6 +143,10 @@ class Client:
         """Read data from a characteristic."""
         if not self.client:
             _LOGGER.warning("Cannot read: No active client connection")
+            return None
+        if not self.client.is_connected:
+            # dropped by the machine, the ping loop connects again
+            _LOGGER.debug("Cannot read: connection lost")
             return None
 
         try:
