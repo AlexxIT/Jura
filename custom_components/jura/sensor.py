@@ -85,7 +85,7 @@ class JuraStatisticsSensor(JuraEntity, SensorEntity):
     def internal_update(self):
         """Override parent method to ensure statistics are refreshed."""
         _LOGGER.debug(f"Updating sensor {self._attr_name}")
-        if self.hass is not None:
+        if self.hass is not None and self.enabled:
             self.async_write_ha_state()
 
 
@@ -166,5 +166,5 @@ class JuraAlertSensor(JuraEntity, SensorEntity):
     def internal_update(self):
         """Override parent method to ensure alerts are refreshed."""
         _LOGGER.debug(f"Updating alert sensor {self._attr_name}")
-        if self.hass is not None:
+        if self.hass is not None and self.enabled:
             self.async_write_ha_state()
